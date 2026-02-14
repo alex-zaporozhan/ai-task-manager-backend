@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Task Manager</title>
+    <title>Enterprise AI Task Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .loader { border-top-color: #4f46e5; -webkit-animation: spinner 1.5s linear infinite; animation: spinner 1.5s linear infinite; }
+        .loader { border-top-color: #4f46e5; animation: spinner 1.5s linear infinite; }
         @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -15,231 +15,172 @@
 </head>
 <body class="bg-gray-50 min-h-screen font-sans text-gray-900">
 
-    <!-- Navbar -->
     <nav class="bg-white shadow fixed w-full z-10 top-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
                     <h1 class="text-2xl font-extrabold text-indigo-600 tracking-tight">🚀 Enterprise AI</h1>
                     <div id="nav-links" class="hidden flex space-x-4">
-                        <button onclick="switchTab('tasks')" id="nav-tasks" class="px-3 py-2 rounded-md text-sm font-medium bg-gray-100">Задачи</button>
-                        <button onclick="switchTab('team')" id="nav-team" class="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:bg-gray-50">Команда</button>
+                        <button onclick="switchTab('tasks')" id="nav-tasks" class="px-3 py-2 rounded-md text-sm font-medium bg-gray-100">Tasks</button>
+                        <button onclick="switchTab('team')" id="nav-team" class="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900">Team</button>
                     </div>
                 </div>
                 <div class="flex items-center">
                     <span id="user-email" class="mr-4 text-gray-600 text-sm font-medium hidden"></span>
-                    <!-- Исправлена кнопка Logout: добавлен onclick -->
-                    <button id="btn-logout" onclick="logout()" class="hidden text-red-500 hover:text-red-700 text-sm font-semibold border border-red-200 px-3 py-1 rounded hover:bg-red-50 transition">Выйти</button>
+                    <button onclick="logout()" id="btn-logout" class="hidden text-red-500 hover:text-red-700 text-sm font-semibold border border-red-200 px-3 py-1 rounded">Logout</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="pt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
         <!-- Auth Screen -->
         <div id="auth-screen" class="flex items-center justify-center h-[70vh]">
             <div class="bg-white p-10 rounded-2xl shadow-xl w-96 border border-gray-100">
-                <h2 class="text-3xl font-bold text-gray-900 text-center mb-8">Вход</h2>
+                <h2 class="text-3xl font-bold text-center mb-8 text-indigo-600">Login</h2>
                 <form id="login-form" class="space-y-5">
-                    <input type="email" id="email" class="block w-full rounded-lg border-gray-300 bg-gray-50 p-3 border" placeholder="Email" required>
-                    <input type="password" id="password" class="block w-full rounded-lg border-gray-300 bg-gray-50 p-3 border" placeholder="Пароль" required>
-                    <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-bold transition">Войти</button>
+                    <input type="email" id="email" class="block w-full rounded-lg border-gray-300 p-3 border" placeholder="Email" required>
+                    <input type="password" id="password" class="block w-full rounded-lg border-gray-300 p-3 border" placeholder="Password" required>
+                    <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-bold shadow-lg">Sign In</button>
                 </form>
                 <p id="login-error" class="mt-4 text-red-500 text-sm text-center hidden"></p>
             </div>
         </div>
 
-        <!-- Dashboard -->
+        <!-- Tasks Dashboard -->
         <div id="dashboard-screen" class="hidden">
             <div class="flex justify-between items-center mb-8">
-                <h2 class="text-3xl font-bold text-gray-900">Задачи</h2>
-                <button onclick="openCreateModal()" class="bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 shadow-md flex items-center">
-                    <span class="text-xl mr-2">+</span> Новая задача
-                </button>
+                <h2 class="text-3xl font-bold">Tasks</h2>
+                <button onclick="openCreateModal()" class="bg-indigo-600 text-white py-2 px-6 rounded-lg hover:bg-indigo-700 shadow-md transition">+ New Task</button>
             </div>
             <div id="task-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- Team Screen -->
+        <!-- Team Dashboard -->
         <div id="team-screen" class="hidden">
-            <h2 class="text-3xl font-bold text-gray-900 mb-8">Команда</h2>
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold">Organization</h2>
+                <button onclick="createNewDepartment()" class="bg-green-600 text-white py-2 px-6 rounded-lg hover:bg-green-700 shadow-md">+ Add Department</button>
+            </div>
             <div id="team-list" class="space-y-8"></div>
         </div>
     </div>
 
     <!-- Create Task Modal -->
-    <div id="create-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-900">Создать задачу</h3>
-                <button onclick="closeCreateModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    <div id="create-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Create New Task</h3>
+                <button onclick="closeCreateModal()" class="text-gray-400 hover:text-gray-900 text-3xl leading-none">&times;</button>
             </div>
             <form id="create-task-form" class="space-y-4">
-                <input type="text" id="task-title" placeholder="Название" class="w-full p-3 border rounded-lg" required>
-                <textarea id="task-desc" placeholder="Описание" rows="3" class="w-full p-3 border rounded-lg"></textarea>
+                <input type="text" id="task-title" placeholder="Title" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" required>
+                <textarea id="task-desc" placeholder="Description" rows="3" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
                 <div class="grid grid-cols-2 gap-4">
                     <select id="task-priority" class="w-full p-3 border rounded-lg bg-white">
                         <option value="medium">Medium</option>
-                        <option value="high">High 🔥</option>
-                        <option value="critical">Critical 🚨</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
                     </select>
-
-                    <!-- ДИНАМИЧЕСКОЕ ПОЛЕ ОТДЕЛА -->
-                    <div id="dept-selector-container">
-                        <!-- Сюда JS вставит либо input disabled, либо select -->
-                    </div>
+                    <div id="dept-selector-container"></div>
                 </div>
-                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-bold">Создать</button>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition">Post Task</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Manage Employee</h3>
+                <button onclick="closeEditUserModal()" class="text-gray-400 hover:text-gray-900 text-3xl leading-none">&times;</button>
+            </div>
+            <form id="edit-user-form" class="space-y-4">
+                <input type="hidden" id="edit-user-id">
+                <div>
+                    <label class="text-xs font-bold text-gray-400 uppercase">Role</label>
+                    <select id="edit-user-role" class="w-full p-2 border rounded bg-white mt-1">
+                        <option value="admin">Admin</option>
+                        <option value="manager">Manager</option>
+                        <option value="employee">Employee</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-400 uppercase">Department</label>
+                    <select id="edit-user-dept" class="w-full p-2 border rounded bg-white mt-1"></select>
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button type="button" onclick="closeEditUserModal()" class="flex-1 py-2 bg-gray-100 rounded hover:bg-gray-200 transition">Cancel</button>
+                    <button type="submit" class="flex-1 py-2 bg-indigo-600 text-white rounded font-bold hover:bg-indigo-700 transition">Save</button>
+                </div>
             </form>
         </div>
     </div>
 
     <script>
-        const API_URL = "http://localhost:8000";
+        const API_URL = window.location.origin;
         let token = localStorage.getItem("token");
         let currentUser = null;
-        let allDepartments = [];
+        let allDepts = [];
 
-        // --- Auth & Init ---
         async function checkAuth() {
             if (token) {
                 try {
-                    // Загружаем профиль сразу
                     const res = await fetch(`${API_URL}/auth/me`, { headers: { "Authorization": `Bearer ${token}` } });
                     if (!res.ok) throw new Error();
                     currentUser = await res.json();
-
-                    // Обновляем UI
                     document.getElementById("auth-screen").classList.add("hidden");
                     document.getElementById("nav-links").classList.remove("hidden");
                     document.getElementById("btn-logout").classList.remove("hidden");
-
-                    const emailEl = document.getElementById("user-email");
-                    emailEl.innerText = `${currentUser.full_name} (${currentUser.role})`;
-                    emailEl.classList.remove("hidden");
-
-                    // Загружаем отделы (нужны для админа в модалке)
-                    await fetchDepartments();
-
+                    document.getElementById("user-email").innerText = `${currentUser.full_name} (${currentUser.role})`;
+                    document.getElementById("user-email").classList.remove("hidden");
+                    const deptRes = await fetch(`${API_URL}/departments/`, { headers: { "Authorization": `Bearer ${token}` } });
+                    allDepts = await deptRes.json();
                     switchTab('tasks');
-                } catch (e) {
-                    logout();
-                }
-            } else {
-                showLogin();
-            }
+                } catch (e) { logout(); }
+            } else { showLogin(); }
         }
 
         function showLogin() {
             document.getElementById("auth-screen").classList.remove("hidden");
             document.getElementById("dashboard-screen").classList.add("hidden");
             document.getElementById("team-screen").classList.add("hidden");
-            document.getElementById("nav-links").classList.add("hidden");
-            document.getElementById("btn-logout").classList.add("hidden");
-            document.getElementById("user-email").classList.add("hidden");
         }
 
         function logout() {
             localStorage.removeItem("token");
-            token = null;
-            currentUser = null;
-            showLogin();
+            location.reload();
         }
 
-        // --- Logic ---
-        async function fetchDepartments() {
-            try {
-                const res = await fetch(`${API_URL}/departments/`, { headers: { "Authorization": `Bearer ${token}` } });
-                if (res.ok) allDepartments = await res.json();
-            } catch (e) { console.error(e); }
+        function switchTab(tab) {
+            document.getElementById("dashboard-screen").classList.toggle("hidden", tab !== 'tasks');
+            document.getElementById("team-screen").classList.toggle("hidden", tab !== 'team');
+            document.getElementById("nav-tasks").classList.toggle("bg-gray-100", tab === 'tasks');
+            document.getElementById("nav-team").classList.toggle("bg-gray-100", tab === 'team');
+            if (tab === 'tasks') loadTasks();
+            if (tab === 'team') loadTeam();
         }
 
-        // Логика открытия модалки (Admin vs Employee)
-        function openCreateModal() {
-            const container = document.getElementById("dept-selector-container");
-            container.innerHTML = "";
-
-            if (currentUser.role === 'admin') {
-                // Если Админ - даем выбор отдела
-                let options = allDepartments.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
-                if (allDepartments.length === 0) options = `<option value="">Нет отделов</option>`;
-
-                container.innerHTML = `
-                    <select id="target-dept-id" class="w-full p-3 border rounded-lg bg-white">
-                        <option value="" disabled selected>Выберите отдел</option>
-                        ${options}
-                    </select>`;
-            } else {
-                // Если Сотрудник - показываем "Ваш отдел" и скрытый ID
-                // (Бэкенд сам подставит отдел, если не передать ID, но для красоты покажем)
-                container.innerHTML = `
-                    <input type="text" disabled value="Мой отдел" class="w-full p-3 border rounded-lg bg-gray-100 text-gray-500">
-                `;
-            }
-            document.getElementById("create-modal").classList.remove("hidden");
-        }
-
-        function closeCreateModal() {
-            document.getElementById("create-modal").classList.add("hidden");
-        }
-
-        // Создание задачи
-        document.getElementById("create-task-form").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const title = document.getElementById("task-title").value;
-            const desc = document.getElementById("task-desc").value;
-            const priority = document.getElementById("task-priority").value;
-
-            let targetDeptId = null;
-            // Если есть селект (Админ), берем значение оттуда
-            const selectEl = document.getElementById("target-dept-id");
-            if (selectEl) targetDeptId = selectEl.value;
-
-            const payload = {
-                title, description: desc, priority,
-                deadline: "2030-01-01T12:00:00Z",
-                target_dept_id: targetDeptId // Может быть null, бэкенд обработает
-            };
-
-            const res = await fetch(`${API_URL}/tasks/`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                closeCreateModal();
-                loadTasks();
-            } else {
-                alert("Ошибка! Возможно, вы Админ и не выбрали отдел?");
-            }
-        });
-
-        // Загрузка задач
         async function loadTasks() {
             const container = document.getElementById("task-list");
-            container.innerHTML = '<div>Загрузка...</div>';
+            container.innerHTML = "Loading...";
             const res = await fetch(`${API_URL}/tasks/`, { headers: { "Authorization": `Bearer ${token}` } });
             const tasks = await res.json();
-
-            container.innerHTML = "";
-            if (tasks.length === 0) {
-                container.innerHTML = `<div class="text-gray-500">Нет задач</div>`;
-                return;
-            }
-
-            tasks.forEach(task => {
+            container.innerHTML = tasks.length === 0 ? '<div class="col-span-3 text-gray-400">No tasks found</div>' : "";
+            tasks.forEach(t => {
                 const card = document.createElement("div");
-                card.className = "bg-white p-6 rounded-xl shadow-sm border border-gray-100";
+                card.className = "bg-white p-6 rounded-xl shadow-sm border flex flex-col justify-between";
                 card.innerHTML = `
-                    <h3 class="font-bold text-lg">${task.title}</h3>
-                    <p class="text-gray-600 text-sm mb-4">${task.description || ""}</p>
-                    <div class="flex justify-between items-center mt-4">
-                        <span class="text-xs bg-gray-100 px-2 py-1 rounded">${task.status}</span>
-                        <button onclick="analyzeTask('${task.id}')" class="text-indigo-600 text-sm font-bold">✨ AI Analyze</button>
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-gray-800">${t.title}</h3>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-extrabold uppercase">${t.status}</span>
+                        </div>
+                        <p class="text-gray-500 text-sm mb-4 h-12 overflow-hidden">${t.description || ""}</p>
                     </div>
-                    <div id="ai-result-${task.id}" class="hidden mt-3 p-3 bg-indigo-50 rounded text-sm text-gray-800"></div>
+                    <button onclick="analyzeTask('${t.id}')" class="w-full py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-bold hover:bg-indigo-100 transition">✨ Gemini Advice</button>
+                    <div id="ai-result-${t.id}" class="hidden mt-3 p-3 bg-gray-50 rounded text-xs text-gray-600 italic border"></div>
                 `;
                 container.appendChild(card);
             });
@@ -254,31 +195,110 @@
             box.innerHTML = data.ai_advice.replace(/\n/g, '<br>');
         }
 
-        // Переключение вкладок
-        function switchTab(tab) {
-            document.getElementById("dashboard-screen").classList.toggle("hidden", tab !== 'tasks');
-            document.getElementById("team-screen").classList.toggle("hidden", tab !== 'team');
-            if (tab === 'tasks') loadTasks();
-            // if (tab === 'team') loadTeam(); // Тут логика загрузки команды из прошлого кода
+        async function loadTeam() {
+            const container = document.getElementById("team-list");
+            container.innerHTML = "Loading...";
+            const usersRes = await fetch(`${API_URL}/auth/users`, { headers: { "Authorization": `Bearer ${token}` } });
+            if (usersRes.status === 403) {
+                container.innerHTML = "<div class='p-4 bg-yellow-50 text-yellow-700 rounded'>Administrators only.</div>";
+                return;
+            }
+            const users = await usersRes.json();
+            container.innerHTML = "";
+            allDepts.forEach(dept => {
+                const deptUsers = users.filter(u => u.department_id === dept.id);
+                const section = document.createElement("div");
+                section.className = "bg-white rounded-xl shadow-sm border overflow-hidden";
+                section.innerHTML = `
+                    <div class="bg-gray-50 px-6 py-3 border-b font-bold flex justify-between items-center">${dept.name}</div>
+                    <ul class="divide-y">${deptUsers.map(u => `
+                        <li class="p-4 flex justify-between items-center">
+                            <div><p class="text-sm font-bold">${u.full_name}</p><p class="text-xs text-gray-400">${u.email}</p></div>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-bold uppercase">${u.role}</span>
+                                ${currentUser.role === 'admin' ? `<button onclick="openEditUserModal('${u.id}', '${u.role}', '${u.department_id}')" class="hover:scale-110 transition">⚙️</button>` : ''}
+                            </div>
+                        </li>
+                    `).join('')}</ul>
+                `;
+                container.appendChild(section);
+            });
         }
 
-        // Login Handler
+        function openCreateModal() {
+            const container = document.getElementById("dept-selector-container");
+            if (currentUser && currentUser.role === 'admin') {
+                container.innerHTML = `<select id="target-dept-id" class="w-full p-3 border rounded-lg bg-white shadow-inner">${allDepts.map(d => `<option value="${d.id}">${d.name}</option>`).join('')}</select>`;
+            } else {
+                container.innerHTML = `<input type="text" disabled value="My Dept" class="w-full p-3 border rounded-lg bg-gray-50 text-gray-400">`;
+            }
+            document.getElementById("create-modal").classList.remove("hidden");
+        }
+        function closeCreateModal() {
+            document.getElementById("create-modal").classList.add("hidden");
+            document.getElementById("create-task-form").reset();
+        }
+
+        function openEditUserModal(id, role, deptId) {
+            document.getElementById("edit-user-id").value = id;
+            document.getElementById("edit-user-role").value = role;
+            const deptSelect = document.getElementById("edit-user-dept");
+            deptSelect.innerHTML = allDepts.map(d => `<option value="${d.id}" ${d.id === deptId ? 'selected' : ''}>${d.name}</option>`).join('');
+            document.getElementById("edit-user-modal").classList.remove("hidden");
+        }
+        function closeEditUserModal() { document.getElementById("edit-user-modal").classList.add("hidden"); }
+
+        document.getElementById("create-task-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const payload = {
+                title: document.getElementById("task-title").value,
+                description: document.getElementById("task-desc").value,
+                priority: document.getElementById("task-priority").value,
+                deadline: "2030-01-01T12:00:00Z",
+                target_dept_id: document.getElementById("target-dept-id")?.value || currentUser.department_id
+            };
+            const res = await fetch(`${API_URL}/tasks/`, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify(payload) });
+            if (res.ok) { closeCreateModal(); loadTasks(); }
+        });
+
+        document.getElementById("edit-user-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("edit-user-id").value;
+            const payload = {
+                role: document.getElementById("edit-user-role").value,
+                department_id: document.getElementById("edit-user-dept").value
+            };
+            const res = await fetch(`${API_URL}/auth/users/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify(payload) });
+            if (res.ok) { closeEditUserModal(); loadTeam(); }
+        });
+
         document.getElementById("login-form").addEventListener("submit", async (e) => {
             e.preventDefault();
             const formData = new URLSearchParams();
             formData.append("username", document.getElementById("email").value);
             formData.append("password", document.getElementById("password").value);
-
             const res = await fetch(`${API_URL}/auth/token`, { method: "POST", body: formData });
             if (res.ok) {
                 const data = await res.json();
                 localStorage.setItem("token", data.access_token);
-                token = data.access_token;
-                checkAuth();
+                location.reload();
             } else {
-                document.getElementById("login-error").innerText = "Ошибка входа";
+                document.getElementById("login-error").innerText = "Invalid credentials";
                 document.getElementById("login-error").classList.remove("hidden");
             }
+        });
+
+        async function createNewDepartment() {
+            const name = prompt("Enter Department Name:");
+            if (name) {
+                await fetch(`${API_URL}/departments/`, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }, body: JSON.stringify({ name }) });
+                location.reload();
+            }
+        }
+
+        // Close on ESC
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') { closeCreateModal(); closeEditUserModal(); }
         });
 
         checkAuth();
